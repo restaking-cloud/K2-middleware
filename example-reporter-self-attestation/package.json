@@ -1,0 +1,8 @@
+{
+  "name": "self-attestation-example",
+  "license": "MIT",
+  "scripts": {},
+  "dependencies": {
+    "@blockswaplab/rpbs-self-attestation": "^1.0.0"
+  }
+}

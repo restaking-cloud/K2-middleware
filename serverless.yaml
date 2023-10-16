@@ -1,0 +1,80 @@
+service: k2-mw
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-ifelse
+
+custom:
+  currentStage: ${opt:stage, self:provider.stage}
+  serverlessIfElse:
+    - If: '"${self:custom.currentStage}" == "local"'
+      Set:
+        functions.info.handler: ./handler.info
+        functions.report.handler: ./handler.report
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-central-1
+
+  ecr:
+    images:
+      k2_mw:
+        path: ./
+
+  environment:
+    VERSION: ${file(./env/config.${opt:stage, 'dev'}.json):VERSION}
+    SERVICE_PROVIDER_BORROW_ADDRESS: ${file(./env/config.${opt:stage, 'dev'}.json):SERVICE_PROVIDER_BORROW_ADDRESS}
+    DESIGNATED_VERIFIER_PRIVATE_KEY: ${file(./env/config.${opt:stage, 'dev'}.json):DESIGNATED_VERIFIER_PRIVATE_KEY}
+    PROVIDER_URL: ${file(./env/config.${opt:stage, 'dev'}.json):PROVIDER_URL}
+    K_SQUARED_LENDING_CONTRACT: ${file(./env/config.${opt:stage, 'dev'}.json):K_SQUARED_LENDING_CONTRACT}
+    K_SQUARED_REPORTER_REGISTRY: ${file(./env/config.${opt:stage, 'dev'}.json):K_SQUARED_REPORTER_REGISTRY}
+    LIVENESS_ENDPOINT: ${file(./env/config.${opt:stage, 'dev'}.json):LIVENESS_ENDPOINT}
+    CORRUPTION_ENDPOINT: ${file(./env/config.${opt:stage, 'dev'}.json):CORRUPTION_ENDPOINT}
+    IDENTIFIER_GENERATOR_ENDPOINT: ${file(./env/config.${opt:stage, 'dev'}.json):IDENTIFIER_GENERATOR_ENDPOINT}
+    CHAIN_ID: ${file(./env/config.${opt:stage, 'dev'}.json):CHAIN_ID}
+    REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS: ${file(./env/config.${opt:stage, 'dev'}.json):REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS}
+
+functions:
+  info:
+    image:
+      name: k2_mw
+      command:
+        - handler.info
+      entryPoint:
+        - '/lambda-entrypoint.sh'
+    memorySize: 3500
+    timeout: 30
+    events:
+      - http:
+          path: info
+          method: get
+          cors: true
+    vpc:
+      securityGroupIds:
+        - sg-ebdf849f
+      subnetIds:
+        - subnet-0070f2ed34a5f74a7
+
+  report:
+    image:
+      name: k2_mw
+      command:
+        - handler.report
+      entryPoint:
+        - '/lambda-entrypoint.sh'
+    memorySize: 3500
+    timeout: 30
+    events:
+      - http:
+          path: report
+          method: post
+          cors: true
+    vpc:
+      securityGroupIds:
+        - sg-ebdf849f
+      subnetIds:
+        - subnet-0070f2ed34a5f74a7
+

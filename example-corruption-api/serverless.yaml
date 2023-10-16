@@ -1,0 +1,46 @@
+service: k2-c
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-ifelse
+
+custom:
+  currentStage: ${opt:stage, self:provider.stage}
+  serverlessIfElse:
+    - If: '"${self:custom.currentStage}" == "local"'
+      Set:
+        functions.validateCorruption.handler: ./handler.validateCorruption
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-central-1
+
+  ecr:
+    images:
+      k2_c:
+        path: ./
+
+functions:
+  validateCorruption:
+    image:
+      name: k2_c
+      command:
+        - handler.validateCorruption
+      entryPoint:
+        - '/lambda-entrypoint.sh'
+    memorySize: 3500
+    timeout: 30
+    events:
+      - http:
+          path: validateCorruption
+          method: post
+          cors: true
+    vpc:
+      securityGroupIds:
+        - sg-ebdf849f
+      subnetIds:
+        - subnet-0070f2ed34a5f74a7
+
