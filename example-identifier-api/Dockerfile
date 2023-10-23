@@ -8,5 +8,7 @@ RUN yum install gcc-c++ -y
 COPY package.json .
 COPY handler.js .
 COPY response-utils.js .
+COPY abis ./abis
+COPY services ./services
 
 RUN npm install --only=production

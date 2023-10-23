@@ -23,6 +23,10 @@ provider:
       k2_identifier:
         path: ./
 
+  environment:
+    PROVIDER_URL: ${file(./env/config.${opt:stage, 'dev'}.json):PROVIDER_URL}
+    NONCE_MANAGER_ADDRESS: ${file(./env/config.${opt:stage, 'dev'}.json):NONCE_MANAGER_ADDRESS}
+
 functions:
   nextIdentifier:
     image:
