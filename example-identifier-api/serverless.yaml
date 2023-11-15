@@ -25,7 +25,8 @@ provider:
 
   environment:
     PROVIDER_URL: ${file(./env/config.${opt:stage, 'dev'}.json):PROVIDER_URL}
-    NONCE_MANAGER_ADDRESS: ${file(./env/config.${opt:stage, 'dev'}.json):NONCE_MANAGER_ADDRESS}
+    K2_LENDING_ADDRESS: ${file(./env/config.${opt:stage, 'dev'}.json):K2_LENDING_ADDRESS}
+    BEARER_TOKEN: ${file(./env/config.${opt:stage, 'dev'}.json):BEARER_TOKEN}
 
 functions:
   nextIdentifier:

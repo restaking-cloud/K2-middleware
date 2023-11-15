@@ -1,0 +1,38 @@
+name: Deploy Goerli
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push event but only for the "dev" branch
+  push:
+    branches: [ "dev" ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Setting up nodejs
+      - uses: actions/setup-node@v3
+
+        # Setting up NodeJS version matching the version in Docker container
+        with:
+          node-version: 16
+
+      - name: Deploy liveness API
+        run: bash --login -ic ". ~/.bashrc && cd example-liveness-api && yarn && yarn add serverless@3.21.0 && aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile BLOCKSWAP_AWS && aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile BLOCKSWAP_AWS && DOCKER_DEFAULT_PLATFORM=linux/amd64 AWS_PROFILE=BLOCKSWAP_AWS node_modules/serverless/bin/serverless.js deploy --verbose --stage goerli"
+
+      - name: Deploy identifier API
+        run: bash --login -ic ". ~/.bashrc && cd example-identifier-api && yarn && yarn add serverless@3.21.0 && aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile BLOCKSWAP_AWS && aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile BLOCKSWAP_AWS && DOCKER_DEFAULT_PLATFORM=linux/amd64 AWS_PROFILE=BLOCKSWAP_AWS node_modules/serverless/bin/serverless.js deploy --verbose --stage goerli"
+
+      - name: Deploy corruption API
+        run: bash --login -ic ". ~/.bashrc && cd example-corruption-api && yarn && yarn add serverless@3.21.0 && aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile BLOCKSWAP_AWS && aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile BLOCKSWAP_AWS && DOCKER_DEFAULT_PLATFORM=linux/amd64 AWS_PROFILE=BLOCKSWAP_AWS node_modules/serverless/bin/serverless.js deploy --verbose --stage goerli"
+
+      - name: Deploy middleware
+        run: bash --login -ic ". ~/.bashrc && yarn && yarn add serverless@3.21.0 && aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile BLOCKSWAP_AWS && aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile BLOCKSWAP_AWS && DOCKER_DEFAULT_PLATFORM=linux/amd64 AWS_PROFILE=BLOCKSWAP_AWS node_modules/serverless/bin/serverless.js deploy --verbose --stage goerli"

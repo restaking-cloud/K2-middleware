@@ -26,7 +26,7 @@ provider:
 
   environment:
     VERSION: ${file(./env/config.${opt:stage, 'dev'}.json):VERSION}
-    SERVICE_PROVIDER_BORROW_ADDRESS: ${file(./env/config.${opt:stage, 'dev'}.json):SERVICE_PROVIDER_BORROW_ADDRESS}
+    DEFAULT_SERVICE_PROVIDER_BORROW_ADDRESS: ${file(./env/config.${opt:stage, 'dev'}.json):DEFAULT_SERVICE_PROVIDER_BORROW_ADDRESS}
     DESIGNATED_VERIFIER_PRIVATE_KEY: ${file(./env/config.${opt:stage, 'dev'}.json):DESIGNATED_VERIFIER_PRIVATE_KEY}
     PROVIDER_URL: ${file(./env/config.${opt:stage, 'dev'}.json):PROVIDER_URL}
     K_SQUARED_LENDING_CONTRACT: ${file(./env/config.${opt:stage, 'dev'}.json):K_SQUARED_LENDING_CONTRACT}
@@ -36,6 +36,8 @@ provider:
     IDENTIFIER_GENERATOR_ENDPOINT: ${file(./env/config.${opt:stage, 'dev'}.json):IDENTIFIER_GENERATOR_ENDPOINT}
     CHAIN_ID: ${file(./env/config.${opt:stage, 'dev'}.json):CHAIN_ID}
     REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS: ${file(./env/config.${opt:stage, 'dev'}.json):REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS}
+    CORRUPTION_VALIDATION_BEARER_TOKEN: ${file(./env/config.${opt:stage, 'dev'}.json):CORRUPTION_VALIDATION_BEARER_TOKEN}
+    IDENTIFIER_BEARER_TOKEN: ${file(./env/config.${opt:stage, 'dev'}.json):IDENTIFIER_BEARER_TOKEN}
 
 functions:
   info:

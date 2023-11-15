@@ -1,16 +1,7 @@
-const { ethers, utils } = require('ethers');
+const { ethers } = require('ethers');
 const Web3 = require("web3");
 const { getReporterRegistry } = require('../services/contracts');
 const { ecsign } = require('ethereumjs-util');
-
-const ReportTypes = [
-    {name: 'slashType', type: 'uint8'},
-    {name: 'debtor', type: 'address'},
-    {name: 'amount', type: 'uint256'},
-    {name: 'identifier', type: 'uint256'},
-    {name: 'block', type: 'uint256'},
-    {name: 'signature', type: 'bytes'}
-];
 
 const getCurrentBlockNumber = async provider => provider.getBlockNumber()
 
@@ -27,18 +18,6 @@ const signSlashingReport = async (signer, chainId, verifyingContract, report) =>
     } catch (e) {
         throw new Error(`Unable to get report hash`)
     }
-
-    // TODO - clean up
-    // // Sign the typed data
-    // const signature = await signer._signTypedData({
-    //     name: 'KSquaredReporterRegistry',
-    //     version: '1',
-    //     chainId,
-    //     verifyingContract
-    // }, { ReportTypes }, report);
-
-    // From the typed data compute the v, r and s that needs to be returned
-    //const {v, r, s} = utils.splitSignature(signature);
 
     let { v, r, s } = ecsign(
         Buffer.from(unsignedReportHash.slice(2), 'hex'),

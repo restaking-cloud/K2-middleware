@@ -23,6 +23,9 @@ provider:
       k2_c:
         path: ./
 
+  environment:
+    BEARER_TOKEN: ${file(./env/config.${opt:stage, 'dev'}.json):BEARER_TOKEN}
+
 functions:
   validateCorruption:
     image:

@@ -5,23 +5,134 @@
     "type": "constructor"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "previousAdmin",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "newAdmin",
-        "type": "address"
-      }
-    ],
-    "name": "AdminChanged",
-    "type": "event"
+    "inputs": [],
+    "name": "ComeBackLater",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceedMaxBorrowRatio",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceedMaxSlashableAmountPerCorruption",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceedMaxSlashableAmountPerLiveness",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HasDebt",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidDebtPositionType",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidMaxSlashableAmountperCorruption",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidMaxSlashableAmountperLiveness",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MinDepositLimit",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MustPaySlashedAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoDebt",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorAlreadyRegistered",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorBLSKeyNotPermitted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorInvalidRepresentative",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorInvalidStatus",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorKicked",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorNotPartOfInclusion",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NodeOperatorNotRegistered",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotAbleToLiquidate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotAllowedToDecreaseInterestRate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotEnoughAssumedLiquidity",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotEnoughOutstandingInterestToSlash",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TooSmall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAddress",
+    "type": "error"
   },
   {
     "anonymous": false,
@@ -54,19 +165,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "beacon",
-        "type": "address"
-      }
-    ],
-    "name": "BeaconUpgraded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "borrower",
         "type": "address"
       },
@@ -74,6 +172,30 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "designatedVerifier",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerLiveness",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerCorruption",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "interestPaid",
         "type": "uint256"
       }
     ],
@@ -97,6 +219,55 @@
       }
     ],
     "name": "DesignatedVerifierURIUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "designatedVerifier",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerLiveness",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerCorruption",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "resetDuration",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "interestPaid",
+        "type": "uint256"
+      }
+    ],
+    "name": "IncreasedDebt",
     "type": "event"
   },
   {
@@ -167,6 +338,31 @@
       }
     ],
     "name": "KETHWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "liquidator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "liquidationAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "Liquidated",
     "type": "event"
   },
   {
@@ -249,6 +445,25 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "topupAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RepaidSlashAmount",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -323,6 +538,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "hook",
+        "type": "address"
+      }
+    ],
+    "name": "SBPHookUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "address",
         "name": "debtor",
@@ -348,6 +582,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "debtor",
+        "type": "address"
+      }
+    ],
+    "name": "Terminated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "from",
@@ -367,19 +614,6 @@
       }
     ],
     "name": "Transfer",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "Upgraded",
     "type": "event"
   },
   {
@@ -517,6 +751,70 @@
       }
     ],
     "name": "balanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "_blsPubkeys",
+        "type": "bytes[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "_payoutRecipients",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "_blsSignatures",
+        "type": "bytes[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct IProposerRegistry.SignatureECDSA[]",
+        "name": "_ecdsaSignatures",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "batchNodeOperatorDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "blsPublicKeyDepositedTimestamp",
     "outputs": [
       {
         "internalType": "uint256",
@@ -674,6 +972,44 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "debtor",
+        "type": "address"
+      },
+      {
+        "internalType": "enum KSquaredLending.DebtPositionType",
+        "name": "debtPositionType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "designatedVerifier",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerLiveness",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerCorruption",
+        "type": "uint256"
+      }
+    ],
+    "name": "borrowFor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "borrowedLiquidity",
     "outputs": [
@@ -706,8 +1042,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "claimKETH",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "lender",
+        "type": "address"
+      }
+    ],
+    "name": "claimableKETH",
     "outputs": [
       {
         "internalType": "uint256",
@@ -739,79 +1081,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "debtPositions",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "debtor",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "designatedVerifier",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "principalAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "interestPerSec_RAY",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endTimestamp",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "slashAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxSlashableAmountPerLiveness",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxSlashableAmountPerCorruption",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "debtors",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -904,8 +1173,18 @@
           },
           {
             "internalType": "address",
+            "name": "hook",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
             "name": "designatedVerifier",
             "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "designatedVerifierURI",
+            "type": "string"
           },
           {
             "internalType": "uint256",
@@ -1046,7 +1325,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -1062,6 +1341,25 @@
       }
     ],
     "name": "getOutstandingInterest",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "debtor",
+        "type": "address"
+      }
+    ],
+    "name": "getRemainingDuration",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1204,6 +1502,49 @@
       }
     ],
     "name": "increaseDebt",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "debtor",
+        "type": "address"
+      },
+      {
+        "internalType": "enum KSquaredLending.DebtPositionType",
+        "name": "debtPositionType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "designatedVerifier",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerLiveness",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxSlashableAmountPerCorruption",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "resetDuration",
+        "type": "bool"
+      }
+    ],
+    "name": "increaseDebtFor",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1384,6 +1725,32 @@
   },
   {
     "inputs": [],
+    "name": "minLockUpPeriod",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minTransferLimit",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "name",
     "outputs": [
       {
@@ -1469,6 +1836,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_reporter",
+        "type": "address"
+      },
+      {
         "internalType": "bytes",
         "name": "_blsPubkey",
         "type": "bytes"
@@ -1481,6 +1853,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "_nodeOperator",
+        "type": "address"
+      },
       {
         "internalType": "bytes",
         "name": "_blsPubkey",
@@ -1500,19 +1877,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "proxiableUUID",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -1596,6 +1960,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_hook",
+        "type": "address"
+      }
+    ],
+    "name": "setHookAsDebtorForSBP",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "enum KSquaredLending.DebtPositionType",
         "name": "_type",
         "type": "uint8"
@@ -1620,6 +1997,45 @@
       }
     ],
     "name": "setMinDepositLimit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newMinLockUpPeriod",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinLockupPeriod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newMinTransferLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinTransferLimit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_nodeOperatorInclusionList",
+        "type": "address"
+      }
+    ],
+    "name": "setNodeOperatorInclusionList",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1698,13 +2114,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "debtor",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "terminate",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1738,6 +2148,24 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "topUpAndTerminate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "debtor",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "amount",
@@ -1816,14 +2244,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newImplementation",
-        "type": "address"
-      }
-    ],
-    "name": "upgradeTo",
+    "inputs": [],
+    "name": "updateInterest",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1832,18 +2254,68 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "newImplementation",
+        "name": "lender",
         "type": "address"
-      },
+      }
+    ],
+    "name": "updateLenderPosition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "bytes",
-        "name": "data",
+        "name": "blsPublicKey",
         "type": "bytes"
       }
     ],
-    "name": "upgradeToAndCall",
+    "name": "updateNodeOperatorPosition",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_maxBorrowRatio_RAY",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxSlashableRatio_RAY",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_terminatePenalty_RAY",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateRatioSettings",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "userLastInteractedTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

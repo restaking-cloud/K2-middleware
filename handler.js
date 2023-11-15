@@ -1,12 +1,11 @@
 const _ = require('lodash');
 const axios = require('axios');
-const BN = require("bn.js");
 const {ethers} = require('ethers');
+const R = require('@blockswaplab/rpbs-self-attestation');
 
-const {
-    getKSquaredLending
-} = require('./services/contracts');
-
+const { utf8ToHex } = require('./services/utils');
+const { deserialiseRPBSSelfAttestation } = require('./services/rpbs');
+const { getKSquaredLending } = require('./services/contracts');
 const {
     getProvider,
     getCurrentBlockNumber,
@@ -14,22 +13,22 @@ const {
     signSlashingReport
 } = require('./services/signer');
 
-const R = require('@blockswaplab/rpbs-self-attestation');
-
 const {formResponse, formErrorMessage} = require('./response-utils');
 
 const {
-    VERSION,
-    SERVICE_PROVIDER_BORROW_ADDRESS,
-    DESIGNATED_VERIFIER_PRIVATE_KEY,
-    PROVIDER_URL,
-    K_SQUARED_LENDING_CONTRACT,
-    K_SQUARED_REPORTER_REGISTRY,
+    VERSION,                                // Only serve payloads from this version
+    DEFAULT_SERVICE_PROVIDER_BORROW_ADDRESS,// Multiple SBP can elect this designated verifier but this is the original creator
+    DESIGNATED_VERIFIER_PRIVATE_KEY,        // Not to be exposed and used for signing slashing requests
+    PROVIDER_URL,                           // Execution layer provider URL for checking contract info
+    K_SQUARED_LENDING_CONTRACT,             // Slashable lending pool
+    K_SQUARED_REPORTER_REGISTRY,            // Registry of registered reporters able to report slashing
     LIVENESS_ENDPOINT,                      // This should be open for reporters to be able to detect liveness events
     CORRUPTION_ENDPOINT,                    // This should have JWT auth with the k squared middleware on the validate endpoint
     IDENTIFIER_GENERATOR_ENDPOINT,          // This should have JWT auth with the k squared middleware on the generate endpoint
-    CHAIN_ID,
-    REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS,
+    CHAIN_ID,                               // Chain validity for slashing messages
+    REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS,   // How long after creating slashing messages they stay active before contract will reject submission
+    CORRUPTION_VALIDATION_BEARER_TOKEN,
+    IDENTIFIER_BEARER_TOKEN
 } = process.env;
 
 const EVENT_TYPES = {
@@ -37,18 +36,11 @@ const EVENT_TYPES = {
     CORRUPTION: 'CORRUPTION'
 };
 
-function utf8ToHex(str) {
-    return '0x' + Array.from(str).map(c =>
-        c.charCodeAt(0) < 128 ? c.charCodeAt(0).toString(16) :
-            encodeURIComponent(c).replace(/\%/g,'').toLowerCase()
-    ).join('');
-}
-
 const info = async () => {
     return formResponse(200, {
         VERSION,
         CHAIN_ID,
-        SERVICE_PROVIDER_BORROW_ADDRESS,
+        DEFAULT_SERVICE_PROVIDER_BORROW_ADDRESS,
         K_SQUARED_LENDING_CONTRACT,
         K_SQUARED_REPORTER_REGISTRY,
         LIVENESS_ENDPOINT,
@@ -59,35 +51,36 @@ const info = async () => {
 const report = async (req) => {
     console.log('Request for report verification triggered');
 
-    const body = JSON.parse(req.body);
-    if (!body) {
+    if (!req.body) {
         return formResponse(500, formErrorMessage('No body'));
+    }
+
+    const body = JSON.parse(req.body);
+    if (!body.eventType || !body.version || !body.eventData || !body.rpbsSelfAttestation || !body.serviceProviderAddress) {
+        return formResponse(500, formErrorMessage('Missing fields in body'));
     }
 
     const {
         rpbsSelfAttestation,
         eventType,
         version,
-        eventData
+        eventData,
+        serviceProviderAddress: SERVICE_PROVIDER_BORROW_ADDRESS
     } = body;
 
-    console.log('Event', {
+    console.log('Event', JSON.stringify({
         rpbsSelfAttestation,
         eventType,
         version,
         eventData
-    });
+    }));
 
-    if (!eventType || !version || !eventData || !rpbsSelfAttestation) {
-        return formResponse(500, formErrorMessage('Missing fields in body'));
+    if (eventType !== EVENT_TYPES.LIVENESS && eventType !== EVENT_TYPES.CORRUPTION) {
+        return formResponse(500, formErrorMessage('Invalid event type'));
     }
 
     if (!rpbsSelfAttestation.signature || !rpbsSelfAttestation.publicKey || !rpbsSelfAttestation.commonInfo) {
         return formResponse(500, formErrorMessage('Missing RPBS data'));
-    }
-
-    if (eventType !== EVENT_TYPES.LIVENESS && eventType !== EVENT_TYPES.CORRUPTION) {
-        return formResponse(500, formErrorMessage('Invalid event type'));
     }
 
     if (parseInt(version) !== parseInt(VERSION)) {
@@ -95,31 +88,13 @@ const report = async (req) => {
     }
 
     // Perform RPBS verification on the reporter
-    let signature = Object.assign({}, rpbsSelfAttestation.signature);
-    signature.z1Hat = R.curveOperations.decodePointInRPBSFormat(
-        signature.z1Hat
-    );
-    signature.c1Hat = R.curveOperations.reduceHexToGroup(
-        new BN(signature.c1Hat, 16)
-    );
-    signature.s1Hat = R.curveOperations.reduceHexToGroup(
-        new BN(signature.s1Hat, 16)
-    );
-    signature.c2Hat = R.curveOperations.reduceHexToGroup(
-        new BN(signature.c2Hat, 16)
-    );
-    signature.s2Hat = R.curveOperations.reduceHexToGroup(
-        new BN(signature.s2Hat, 16)
-    );
-    signature.m1Hat = R.curveOperations.decodePointInRPBSFormat(
-        signature.m1Hat
-    );
-
+    let signature = deserialiseRPBSSelfAttestation(rpbsSelfAttestation);
     const isRPBSValid = R.rpbs.verifySignature(
         R.curveOperations.decodePointInRPBSFormat(rpbsSelfAttestation.publicKey),
         JSON.stringify(rpbsSelfAttestation.commonInfo),
         signature
     );
+
     if (!isRPBSValid) {
         return formResponse(500, formErrorMessage('Invalid RPBS self attestation'));
     }
@@ -135,73 +110,64 @@ const report = async (req) => {
 
     // Start generating the report and then verify the data submitted by the reporter
     const signingWallet = getSigningWallet(DESIGNATED_VERIFIER_PRIVATE_KEY, provider);
-    const deadline = (await getCurrentBlockNumber(provider)) + parseInt(REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS);
     let report = {
         slashType: eventType === EVENT_TYPES.LIVENESS ? '0' : '1',
         debtor: SERVICE_PROVIDER_BORROW_ADDRESS,
-        block: deadline,
         signature: utf8ToHex(Object.keys(rpbsSelfAttestation.signature).map(
             k => rpbsSelfAttestation.signature[k]
         ).join(':'))
     };
 
     if (eventType === EVENT_TYPES.LIVENESS) {
+        if (!eventData || !eventData.query || !eventData.livenessData || !eventData.proposedSlashing) {
+            return formResponse(500, formErrorMessage('Invalid event data for liveness'))
+        }
+
         const {
-            numOfValidatorsOnline,
-            numOfValidatorsOffline,
-            totalValidators,
+            query,
+            livenessData,
             proposedSlashing
         } = eventData;
 
-        if (!rpbsSelfAttestation.commonInfo.numOfValidatorsOnline ||
-            !rpbsSelfAttestation.commonInfo.numOfValidatorsOffline ||
-            !rpbsSelfAttestation.commonInfo.totalValidators
-        ) {
+        if (!rpbsSelfAttestation.commonInfo.livenessData) {
             return formResponse(500, formErrorMessage('Invalid liveness data in RPBS attestation'));
         }
 
-        let livenessData;
+        let livenessResponse;
         try {
-            livenessData = (await axios.get(
-                `${LIVENESS_ENDPOINT}`,
+            livenessResponse = (await axios.get(
+                `${LIVENESS_ENDPOINT}${query}`,
                 {
                     headers: {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     }
                 }
-            )).data; // ERROR handling
+            )).data;
         } catch (e) {
             return formResponse(500, formErrorMessage('Unable to get liveness data'));
         }
-        console.log('Liveness Data', livenessData)
 
-        if (Number(numOfValidatorsOnline) + Number(numOfValidatorsOffline) !== Number(totalValidators)) {
-            return formResponse(500, formErrorMessage('Sum of online + offline invalid'));
+        console.log('Liveness response', livenessResponse)
+        if (!livenessResponse || !livenessResponse.livenessData || !livenessResponse.severityScore) {
+            return formResponse(500, formErrorMessage('Invalid liveness response from service provider - try again later'));
         }
 
-        if (numOfValidatorsOnline !== livenessData.numOfValidatorsOnline ||
-            numOfValidatorsOnline !== rpbsSelfAttestation.commonInfo.numOfValidatorsOnline) {
-            return formResponse(500, formErrorMessage('Num of online validators invalid'));
+        let severityScore = Number(livenessResponse.severityScore);
+        if (isNaN(severityScore) || severityScore <= 0.0 || severityScore > 1.0) {
+            return formResponse(500, formErrorMessage('Invalid severity score'));
         }
 
-        if (numOfValidatorsOffline !== livenessData.numOfValidatorsOffline ||
-            numOfValidatorsOffline !== rpbsSelfAttestation.commonInfo.numOfValidatorsOffline) {
-            return formResponse(500, formErrorMessage('Num of offline validators invalid'));
+        if (!_.isEqual(livenessResponse.livenessData, livenessData)) {
+            return formResponse(500, formErrorMessage('Invalid liveness data versus liveness endpoint'));
         }
 
-        if (totalValidators !== livenessData.totalValidators ||
-            totalValidators !== rpbsSelfAttestation.commonInfo.totalValidators) {
-            return formResponse(500, formErrorMessage('Num of total validators invalid'));
-        }
-
-        let percentageOfValidatorsOnline = Number(livenessData.numOfValidatorsOffline) / Number(livenessData.totalValidators);
-        if (isNaN(percentageOfValidatorsOnline) || percentageOfValidatorsOnline < 0 || percentageOfValidatorsOnline > 100.0) {
-            return formResponse(500, formErrorMessage('Invalid percentage computation'));
+        if (!_.isEqual(livenessResponse.livenessData, rpbsSelfAttestation.commonInfo.livenessData)) {
+            return formResponse(500, formErrorMessage('Invalid liveness data versus RPBS'));
         }
 
         let maxSlashableAmountPerLiveness = debtPosition.maxSlashableAmountPerLiveness;
-        slashAmount = (maxSlashableAmountPerLiveness.mul(ethers.BigNumber.from(livenessData.numOfValidatorsOffline))).div(ethers.BigNumber.from(livenessData.totalValidators));
+        slashAmount = (maxSlashableAmountPerLiveness.mul(ethers.BigNumber.from(ethers.utils.parseEther(livenessResponse.severityScore)))).div(ethers.utils.parseEther('1'));
         if (slashAmount.toString() !== proposedSlashing.toString()) {
             return formResponse(500, formErrorMessage(`Invalid slash amount. Expected ${slashAmount} based on ${maxSlashableAmountPerLiveness} max slashing`));
         }
@@ -212,6 +178,10 @@ const report = async (req) => {
             amount: ethers.BigNumber.from(slashAmount.toString())
         }
     } else if (eventType === EVENT_TYPES.CORRUPTION) {
+        if (!eventData || !eventData.events || !eventData.proposedSlashing) {
+            return formResponse(500, formErrorMessage('Invalid event data for corruption'))
+        }
+
         const {
             events,
             proposedSlashing
@@ -219,6 +189,10 @@ const report = async (req) => {
 
         if (!rpbsSelfAttestation.commonInfo.events) {
             return formResponse(500, formErrorMessage('No corruption events specified in RPBS'));
+        }
+
+        if (!_.isEqual(events, rpbsSelfAttestation.commonInfo.events)) {
+            return formResponse(500, formErrorMessage('Event data not consistent with RPBS self attestation'));
         }
 
         // Corruption events externally validated outside of middleware
@@ -230,7 +204,8 @@ const report = async (req) => {
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${CORRUPTION_VALIDATION_BEARER_TOKEN}`
                     }
                 }
             )).data;
@@ -240,12 +215,12 @@ const report = async (req) => {
         console.log('Corruption response', corruptionResponse);
 
         let severityScore = Number(corruptionResponse.severityScore);
-        if (isNaN(severityScore) || severityScore < 0.0 || severityScore > 1.0) {
+        if (isNaN(severityScore) || severityScore <= 0.0 || severityScore > 1.0) {
             return formResponse(500, formErrorMessage('Invalid severity score'));
         }
 
         let maxSlashableAmountPerCorruption = debtPosition.maxSlashableAmountPerCorruption.toString();
-        slashAmount = (Number(maxSlashableAmountPerCorruption) * severityScore);
+        slashAmount = (maxSlashableAmountPerCorruption.mul(ethers.BigNumber.from(ethers.utils.parseEther(severityScore.toString())))).div(ethers.utils.parseEther('1'));
         if (slashAmount !== Number(proposedSlashing)) {
             return formResponse(500, formErrorMessage(`Invalid slash amount. Expected ${slashAmount} based on ${maxSlashableAmountPerCorruption} max slashing`));
         }
@@ -263,39 +238,45 @@ const report = async (req) => {
             IDENTIFIER_GENERATOR_ENDPOINT,
             {
                 report,
-                eventData
+                eventData,
+                eventType,
+                serviceProviderAddress: SERVICE_PROVIDER_BORROW_ADDRESS
             },
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    'Access-Control-Allow-Origin': '*',
+                    'Authorization': `Bearer ${IDENTIFIER_BEARER_TOKEN}`
                 }
             }
         )).data
 
-        if (isNaN(reportIdentifier.nextIdentifier) || Number(reportIdentifier.nextIdentifier) < 0) {
+        if (!reportIdentifier || !reportIdentifier.nextIdentifier) {
             return formResponse(500, formErrorMessage(`Invalid report identifier`));
         }
 
         reportIdentifier = reportIdentifier.nextIdentifier;
     } catch (e) {
+        console.log(`Unable to get a report identifier`, e);
         return formResponse(500, formErrorMessage(`Unable to get a report identifier`));
     }
 
-    console.log('Report verified');
+    console.log('Report will be verified with identifier', reportIdentifier.toString());
 
     // Sign the report and let the reporter collect their earnings
+    const deadline = (await getCurrentBlockNumber(provider)) + parseInt(REPORT_DEADLINE_LENGTH_IN_ETH_BLOCKS);
     const signedSlashingReport = await signSlashingReport(
         signingWallet,
         CHAIN_ID,
         K_SQUARED_REPORTER_REGISTRY,
         {
             ...report,
+            block: deadline,
             identifier: Number(reportIdentifier)
         }
     );
 
-    console.log('Signature issued', signedSlashingReport);
+    console.log('Signature issued');
 
     return formResponse(200, {
         inputs: {

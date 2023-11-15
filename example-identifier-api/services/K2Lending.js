@@ -1,14 +1,14 @@
 const {ethers} = require('ethers');
 const {getProvider} = require('./Provider');
 
-const getNonceManager = (providerUrl, address) => {
+const getK2Lending = (providerUrl, address) => {
     return new ethers.Contract(
         address,
-        require('../abis/NonceManager.json'),
+        require('../abis/K2Lending.json'),
         getProvider(providerUrl)
     );
 }
 
 module.exports = {
-    getNonceManager
+    getK2Lending
 }

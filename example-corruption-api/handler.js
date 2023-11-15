@@ -7,6 +7,14 @@ const validateCorruption = async (req) => {
         return formResponse(500, formErrorMessage('Missing body'));
     }
 
+    const headers = req.headers;
+    console.log('Headers', headers)
+
+    // Ensure that only those with the correct bearer can access
+    if (!headers || !headers.Authorization || headers.Authorization !== `Bearer ${process.env.BEARER_TOKEN}`) {
+        return formResponse(500, formErrorMessage('Invalid bearer token'));
+    }
+
     if (!body.events) {
         return formResponse(500, formErrorMessage('Missing events'));
     }
