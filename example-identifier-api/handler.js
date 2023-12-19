@@ -36,7 +36,7 @@ const nextIdentifier = async (req) => {
     // On-chain source of nonces can be used. See NonceManager.sol from the K2 smart contract suite for the behaviour of this contract
     let k2 = getK2Lending(PROVIDER_URL, K2_LENDING_ADDRESS)
     let nextIdentifier = parseInt(new Date() / 1000).toString();
-    let debtor = await k2.getDebtor(serviceProviderAddress)
+    let debtor = await k2.getDebtor(body.serviceProviderAddress)
     if (debtor.hook !== '0x0000000000000000000000000000000000000000') {
         const nonceManager = getNonceManager(PROVIDER_URL, debtor.hook)
         if (body.eventType === EVENT_TYPES.LIVENESS) {
